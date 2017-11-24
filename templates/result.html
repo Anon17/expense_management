@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+   <body>
+{% if error %}
+      <p><strong>Error:</strong> {{ error }}
+      {% endif %}
+
+   	
+   	{% for data in result %}
+               <tr>
+                  <td>{{ data.id }}</td><br>
+                  <td>{{ data.cat_name }}</td><br>
+                  <td>{{ data.user_id }}</td><br>
+               </tr>
+            {% endfor %}
+
+   </body>
+</html>
