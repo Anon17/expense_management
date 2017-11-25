@@ -1,17 +1,17 @@
-#http://blog.sahildiwan.com/posts/flask-and-postgresql-app-deployed-on-heroku/
+#import modules
 from flask import Flask,render_template,request, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from passlib.hash import bcrypt
 
-
+#initialization and configuration change the username and password of postgres
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://hiren:hirin2617@localhost:5432/expense_management'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://(username):(password)@localhost:5432/(database name)'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = 'False'
-app.secret_key = 'hirin2617'
+app.secret_key = '(any random string)'
 db = SQLAlchemy(app)
 
 
-# Create our database model
+# Create database model for user
 class users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True)
@@ -23,7 +23,7 @@ class users(db.Model):
         self.username = username
         self.password = bcrypt.encrypt(password)
 
-
+# Create database model for category
 class category_master(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cat_name = db.Column(db.String(120))
@@ -33,6 +33,7 @@ class category_master(db.Model):
         self.cat_name = cat_name
         self.user_id = user_id
 
+# Create database model for expense
 class expense_master(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.String(120))
@@ -47,7 +48,7 @@ class expense_master(db.Model):
         self.amount = amount
 
 
-
+#app logic to display login form
 @app.route('/')
 @app.route('/login')
 def login():
@@ -57,7 +58,7 @@ def login():
     else:
         return render_template('login.html')
 
-
+#app logic for login form
 @app.route('/loginuser',methods=['POST'])
 def loginuser():
     error = None
@@ -76,7 +77,7 @@ def loginuser():
                     return render_template('login.html', error = error)
         return render_template('login.html', error = error)
 
-
+#app logic to display registration form
 @app.route('/register')
 def signup():
     if 'username' in session:
@@ -85,6 +86,7 @@ def signup():
         return render_template('register.html')
 
 
+#app logic for user registration
 @app.route('/registeruser', methods=['POST'])
 def registeruser():
     if request.method == 'POST':
@@ -99,8 +101,21 @@ def registeruser():
         else:
             error = 'Username already taken'
             return render_template('register.html',error = error)
+	
+	
+#app logic to display dashboard page
+@app.route('/home')
+@app.route('/dashboard')
+def index():
+    if 'username' in session:
+        name = session['username']
+        return render_template('index.html', name = name)
+    else:
+        error = 'Invalid request. Please enter username and password!'
+        return render_template('login.html',error = error)
 
 
+#app logic to display add category page
 @app.route('/category')
 def category():
     if 'username' in session:
@@ -112,36 +127,7 @@ def category():
         return render_template('login.html',error = error)
 
 
-
-@app.route('/add-expense')
-def addexpense():
-    if 'username' in session:
-        catdata = db.session.query(category_master).filter(category_master.user_id == session['username']).all()
-        name = session['username']
-        return render_template('addexpense.html',catdata = catdata, name = name)
-    else:
-        error = 'Invalid request. Please enter username and password!'
-        return render_template('login.html',error = error)
-
-
-
-@app.route('/home')
-@app.route('/dashboard')
-def index():
-    if 'username' in session:
-        name = session['username']
-        return render_template('index.html', name = name)
-    else:
-        error = 'Invalid request. Please enter username and password!'
-        return render_template('login.html',error = error)
-
-@app.route('/signout')
-def signout():
-    session.pop('username', None)
-    session.pop('email', None)
-    return redirect(url_for('login'))
-
-
+#app logic to add category
 @app.route('/addcategory', methods=['POST'])
 def addcategory():
     if request.method == 'POST':
@@ -160,6 +146,32 @@ def addcategory():
     return render_template('category.html',error=error)
 
 
+#app logic to view all category of user
+@app.route('/view-category')
+def viewcategory():
+    if 'username' in session:
+        catdata = db.session.query(category_master).filter(category_master.user_id == session['username']).all()
+        name = session['username']
+        return render_template('viewcategory.html',catdata = catdata, name = name)
+    else:
+        error = 'Invalid request. Please enter username and password!'
+        return render_template('login.html',error = error)
+
+
+#app logic to display add expense page
+@app.route('/add-expense')
+def addexpense():
+    if 'username' in session:
+        catdata = db.session.query(category_master).filter(category_master.user_id == session['username']).all()
+        name = session['username']
+        return render_template('addexpense.html',catdata = catdata, name = name)
+    else:
+        error = 'Invalid request. Please enter username and password!'
+        return render_template('login.html',error = error)
+
+
+
+#app logic to add expense
 @app.route('/addexpense', methods=['POST'])
 def addnewexpense():
     if request.method == 'POST':
@@ -172,17 +184,7 @@ def addnewexpense():
         return render_template('addexpense.html',error = error, name = name)
 
 
-@app.route('/view-category')
-def viewcategory():
-    if 'username' in session:
-        catdata = db.session.query(category_master).filter(category_master.user_id == session['username']).all()
-        name = session['username']
-        return render_template('viewcategory.html',catdata = catdata, name = name)
-    else:
-        error = 'Invalid request. Please enter username and password!'
-        return render_template('login.html',error = error)
-
-
+#app logic to view all expenes of user
 @app.route('/view-expense')
 def viewexpense():
     if 'username' in session:
@@ -197,6 +199,15 @@ def viewexpense():
         return render_template('login.html',error = error)
 
 
+#app logic to signout
+@app.route('/signout')
+def signout():
+    session.pop('username', None)
+    session.pop('email', None)
+    return redirect(url_for('login'))
+
+
+
 if __name__ == '__main__':
 	db.create_all()
-	app.run(debug = True)
+	app.run()
