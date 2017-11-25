@@ -5,9 +5,9 @@ from passlib.hash import bcrypt
 
 #initialization and configuration change the username and password of postgres
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://(username):(password)@localhost:5432/(database name)'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://hiren:hirin2617@localhost:5432/expense_management'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = 'False'
-app.secret_key = '(any random string)'
+app.secret_key = 'hirin2617'
 db = SQLAlchemy(app)
 
 
